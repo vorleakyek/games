@@ -122,17 +122,39 @@ export async function getTopPlayers(token: string): Promise<topPlayerData[]> {
   return await res.json();
 }
 
-export async function getPokemonData(token: string): Promise<PokemonData[]> {
-  const req = {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
-  };
-  const res = await fetch('api/pokemon', req);
-  if (!res.ok) throw new Error(`fetch Error ${res.status}`);
-  return await res.json();
+// export async function getPokemonData(token: string): Promise<PokemonData[]> {
+//   const req = {
+//     method: 'GET',
+//     headers: {
+//       'Content-Type': 'application/json',
+//       Authorization: `Bearer ${token}`,
+//     },
+//   };
+//   const res = await fetch('api/pokemon', req);
+//   if (!res.ok) throw new Error(`fetch Error ${res.status}`);
+//   return await res.json();
+// }
+
+
+export function fetchPokemonData () {
+  const promises = [];
+  for (let i = 1; i<=9; i++) {
+    const min = 1;
+    const max = 1000;
+    const randomID = Math.floor(Math.random() * (max - min + 1)) + min;
+    const url=`https://pokeapi.co/api/v2/pokemon/${randomID}`;
+    promises.push(fetch(url).then(res=>res.json()));
+  }
+
+  return Promise.all(promises).then((results)=>{
+    const pokemon = results.map((result)=>({
+        name: result.name,
+        imageUrl: result.sprites['front_default'],
+        type: result.types.map((type)=>type.type.name).join(', '),
+        id: result.id
+    }));
+    return pokemon;
+  })
 }
 
 /***************** CODE FOR POKEMON DATA in the DATABASE *****************/
