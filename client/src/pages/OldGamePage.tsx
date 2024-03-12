@@ -16,25 +16,25 @@ import {
 
 type Cards = {
   cardId: string;
-  isFlipped: boolean;
+  flipped: boolean;
   imageUrl: string;
   name: string;
 };
 
 export function GamePage({ onUpdateStarLevelTheme }) {
   const [cards, setCards] = useState<Cards[]>([]);
-  const [isMuted, setIsMuted] = useState(true);
-
   const [startTime, setStartTime] = useState(0);
-  const [isStopTiming, setIsStopTiming] = useState(false);
-  const [totalTimeSpent, setTotalTimeSpent] = useState(0);
-  const [seconds, setSeconds] = useState(0);
-  const [minutes, setMinutes] = useState(0);
 
-  const [totalClicks, setTotalClicks] = useState(0);
   const [flippedCount, setFlippedCount] = useState(0);
   const [flippedCards, setFlippedCards] = useState<Cards[]>([]);
-  const [revealedCount, setRevealedCount] = useState(0);
+  const [numOfCorrectFlippedCards, setNumOfCorrectFlippedCards] = useState(0);
+  const [totalNumCardsClicked, setTotalNumCardsClicked] = useState(0);
+
+  const [timeSpentInSecond, setTimeSpentInSecond] = useState(0);
+  const [timeSpentInMinutes, setTimeSpentInMinutes] = useState(0);
+  const [totalTimeSpent, setTotalTimeSpent] = useState(0);
+  const [stopTiming, setStopTiming] = useState(false);
+  const [sound, setSound] = useState(true);
 
   const { user, token, level, cardTheme } = useContext(AppContext);
   const navigate = useNavigate();
@@ -54,7 +54,7 @@ export function GamePage({ onUpdateStarLevelTheme }) {
         const pokemonArray = doublePokemonData.map((item, index) => ({
           ...item,
           cardId: `${index}`,
-          isFlipped: false,
+          flipped: false,
         }));
         const shufflePokemonArray = pokemonArray.sort(
           () => Math.random() - 0.5
@@ -73,17 +73,17 @@ export function GamePage({ onUpdateStarLevelTheme }) {
       const endTime = new Date().getTime();
       const timeSpent = (endTime - startTime) / 1000;
 
-      if (!isStopTiming) {
+      if (!stopTiming) {
         setTotalTimeSpent(timeSpent);
-        setMinutes(Math.floor((timeSpent / 60) % 60));
-        setSeconds(Math.floor(timeSpent % 60));
+        setTimeSpentInMinutes(Math.floor((timeSpent / 60) % 60));
+        setTimeSpentInSecond(Math.floor(timeSpent % 60));
       }
     }, 1000);
 
     return () => {
       clearInterval(intervalId);
     };
-  }, [startTime, isStopTiming]);
+  }, [startTime, stopTiming]);
 
   useEffect(() => {
     async function compareCards() {
@@ -93,23 +93,23 @@ export function GamePage({ onUpdateStarLevelTheme }) {
           setCards((cards) =>
             cards.map((card) =>
               card.cardId === card1.cardId || card.cardId === card2.cardId
-                ? { ...card, isFlipped: true }
+                ? { ...card, flipped: true }
                 : card
             )
           );
 
-          setRevealedCount(revealedCount + 2);
+          setNumOfCorrectFlippedCards(numOfCorrectFlippedCards + 2);
           setFlippedCards([]);
           setFlippedCount(0);
-          isMuted && new Audio(matchSound).play();
+          sound && new Audio(matchSound).play();
 
-          if (revealedCount === cards.length - 2) {
-            isMuted && new Audio(winSound).play();
-            setIsStopTiming(true);
+          if (numOfCorrectFlippedCards === cards.length - 2) {
+            sound && new Audio(winSound).play();
+            setStopTiming(true);
 
             const score = calculateScore(
               level as number,
-              totalClicks,
+              totalNumCardsClicked,
               totalTimeSpent
             );
 
@@ -123,8 +123,8 @@ export function GamePage({ onUpdateStarLevelTheme }) {
                 star,
                 score,
                 totalTimeSpent,
-                totalClicks,
-                isMuted
+                totalNumCardsClicked,
+                sound
               ));
 
             setTimeout(() => {
@@ -138,7 +138,7 @@ export function GamePage({ onUpdateStarLevelTheme }) {
             setCards(
               cards.map((card) =>
                 card.cardId === card1.cardId || card.cardId === card2.cardId
-                  ? { ...card, isFlipped: false }
+                  ? { ...card, flipped: false }
                   : card
               )
             );
@@ -150,16 +150,14 @@ export function GamePage({ onUpdateStarLevelTheme }) {
   }, [flippedCards, flippedCount]);
 
   const handleCardClick = (clickedCard: Cards) => {
-    isMuted && new Audio(flippedSound).play();
-    !clickedCard.isFlipped && setTotalClicks(totalClicks + 1);
-    if (flippedCount < 2 && !clickedCard.isFlipped) {
+    sound && new Audio(flippedSound).play();
+    !clickedCard.flipped && setTotalNumCardsClicked(totalNumCardsClicked + 1);
+    if (flippedCount < 2 && !clickedCard.flipped) {
       setFlippedCards([...flippedCards, clickedCard]);
       setFlippedCount(flippedCount + 1);
       setCards(
         cards.map((card) =>
-          card.cardId === clickedCard.cardId
-            ? { ...card, isFlipped: true }
-            : card
+          card.cardId === clickedCard.cardId ? { ...card, flipped: true } : card
         )
       );
     }
@@ -208,8 +206,8 @@ export function GamePage({ onUpdateStarLevelTheme }) {
     return percentage;
   };
 
-  function muteSound(isMuted: boolean) {
-    setIsMuted(!isMuted);
+  function muteSound(sound: boolean) {
+    setSound(!sound);
   }
 
   const cardColumnLevel = (level) => {
@@ -228,13 +226,15 @@ export function GamePage({ onUpdateStarLevelTheme }) {
         <div className="row justify-content-space-between paddingLR-20 ">
           <div className="column-third text-align-left">
             <p className="level">Level: {level}</p>
-            <p className="color-blue">Total Clicks: {totalClicks} </p>
+            <p className="color-blue">
+              Number of cards Clicked: {totalNumCardsClicked}{' '}
+            </p>
           </div>
           <div className="column-two-third text-align-right">
             <p className="username uppercase">{user?.username.toUpperCase()}</p>
             <p className="color-blue">
-              Time: {minutes.toString().padStart(2, '0')} :{' '}
-              {seconds.toString().padStart(2, '0')}{' '}
+              Time: {timeSpentInMinutes.toString().padStart(2, '0')} :{' '}
+              {timeSpentInSecond.toString().padStart(2, '0')}{' '}
             </p>
           </div>
         </div>
@@ -243,9 +243,9 @@ export function GamePage({ onUpdateStarLevelTheme }) {
             <button
               className="sound-btn"
               onClick={() => {
-                muteSound(isMuted);
+                muteSound(sound);
               }}>
-              {isMuted ? (
+              {sound ? (
                 <FaVolumeLow className="sound-icon" />
               ) : (
                 <FaVolumeXmark className="sound-icon" />
