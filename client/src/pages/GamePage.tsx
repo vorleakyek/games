@@ -9,7 +9,6 @@ import winSound from '../assets/level-win.mp3';
 import { AppContext } from '../components/AppContext';
 import { Card } from '../components/Card';
 import {
-  getPokemonData,
   getLevelAndTheme,
   updateGameProgressData,
   fetchPokemonData,
@@ -43,9 +42,7 @@ export function GamePage({ onUpdateStarLevelTheme }) {
   useEffect(() => {
     async function fetchPokemon() {
       try {
-        // const pokemonDataArr = await getPokemonData(token as string);
         const pokemonDataArr = await fetchPokemonData();
-        console.log(pokemonDataArr);
         const { level, cardTheme } = await getLevelAndTheme(token as string);
         onUpdateStarLevelTheme(0, level, cardTheme);
         const distinctCardsLevels = { 1: 3, 2: 6, 3: 9 };
