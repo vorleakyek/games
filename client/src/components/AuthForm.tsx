@@ -66,7 +66,7 @@ export function AuthForm({ action, onSignIn }: Props) {
             />
           </label>
           <span>
-            {error && <div style={{ color: 'red' }}>Invalid Login. </div>}
+            {error && <div style={{ color: 'red' }}>Invalid Login</div>}
           </span>
         </div>
       </div>

@@ -45,7 +45,7 @@ export function HomePage() {
                   <div className="column-full">
                     <label>
                       <h3 className="margin-top-bottom-10">Level:</h3>
-                      <select name="level" className="font-size-14">
+                      <select name="level" className="font-size-14" required>
                         <option value="">Select a level</option>
                         <option value="1">Level 1: 6 cards</option>
                         <option value="2">Level 2: 12 cards</option>

@@ -100,7 +100,6 @@ export default function App() {
           />
           <Route path="sign-in" element={<AuthPage action="sign-in" />} />
           <Route path="sign-up" element={<AuthPage action="sign-up" />} />
-          <Route path="home-page" element={<HomePage />} />
           <Route
             path="level-up"
             element={
