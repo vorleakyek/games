@@ -12,6 +12,9 @@ import {
   getLevelAndTheme,
   updateGameProgressData,
   fetchPokemonData,
+  calculateScore,
+  calculateStar,
+  gameLevel,
 } from '../lib/data';
 
 type Cards = {
@@ -21,7 +24,7 @@ type Cards = {
   name: string;
 };
 
-export function GamePage({ onUpdateStarLevelTheme }) {
+export function GamePage({ updateStarLevelTheme }) {
   const [cards, setCards] = useState<Cards[]>([]);
   const [isMuted, setIsMuted] = useState(true);
 
@@ -40,11 +43,11 @@ export function GamePage({ onUpdateStarLevelTheme }) {
   const navigate = useNavigate();
 
   useEffect(() => {
-    async function fetchPokemon() {
+    async function generateCards() {
       try {
         const pokemonDataArr = await fetchPokemonData();
         const { level, cardTheme } = await getLevelAndTheme(token as string);
-        onUpdateStarLevelTheme(0, level, cardTheme);
+        updateStarLevelTheme(0, level, cardTheme);
         const distinctCardsLevels = { 1: 3, 2: 6, 3: 9 };
         const distinctCards = pokemonDataArr.slice(
           0,
@@ -64,7 +67,7 @@ export function GamePage({ onUpdateStarLevelTheme }) {
         console.error(err);
       }
     }
-    fetchPokemon();
+    generateCards();
     setStartTime(new Date().getTime());
   }, []);
 
@@ -113,8 +116,8 @@ export function GamePage({ onUpdateStarLevelTheme }) {
               totalTimeSpent
             );
 
-            const star = starResult(score);
-            onUpdateStarLevelTheme(star, level, cardTheme);
+            const star = calculateStar(score);
+            updateStarLevelTheme(star, level, cardTheme);
 
             token &&
               (await updateGameProgressData(
@@ -165,63 +168,6 @@ export function GamePage({ onUpdateStarLevelTheme }) {
     }
   };
 
-  const starResult = (percentage: number) => {
-    if (percentage >= 80) {
-      return 5;
-    } else if (percentage >= 70) {
-      return 4;
-    } else if (percentage >= 50) {
-      return 3;
-    } else if (percentage >= 30) {
-      return 2;
-    } else if (percentage >= 10) {
-      return 1;
-    } else {
-      return 0;
-    }
-  };
-
-  const calculateScore = (
-    level: number,
-    numberClicks: number,
-    totalTimeSpent: number
-  ) => {
-    let maxClicks = 0;
-    let maxTotalTimeSpent = 0;
-
-    if (level === 1) {
-      maxClicks = 30;
-      maxTotalTimeSpent = 120;
-    } else if (level === 2) {
-      maxClicks = 60;
-      maxTotalTimeSpent = 240;
-    } else if (level === 3) {
-      maxClicks = 90;
-      maxTotalTimeSpent = 360;
-    }
-
-    const clicksPercentage = ((maxClicks - numberClicks) / maxClicks) * 100;
-    const timePercentage =
-      ((maxTotalTimeSpent - totalTimeSpent) / maxTotalTimeSpent) * 100;
-
-    const percentage = (clicksPercentage + timePercentage) / 2;
-    return percentage;
-  };
-
-  function muteSound(isMuted: boolean) {
-    setIsMuted(!isMuted);
-  }
-
-  const cardColumnLevel = (level) => {
-    if (level === 1) {
-      return 'col-lev-1';
-    } else if (level === 2) {
-      return 'col-lev-2';
-    } else {
-      return 'col-lev-3';
-    }
-  };
-
   return (
     <>
       <div className="container">
@@ -233,8 +179,8 @@ export function GamePage({ onUpdateStarLevelTheme }) {
           <div className="column-two-third text-align-right">
             <p className="username uppercase">{user?.username.toUpperCase()}</p>
             <p className="color-blue">
-              Time: {minutes.toString().padStart(2, '0')} :{' '}
-              {seconds.toString().padStart(2, '0')}{' '}
+              Time: {minutes.toString().padStart(2, '0')}:
+              {seconds.toString().padStart(2, '0')}
             </p>
           </div>
         </div>
@@ -243,7 +189,7 @@ export function GamePage({ onUpdateStarLevelTheme }) {
             <button
               className="sound-btn"
               onClick={() => {
-                muteSound(isMuted);
+                setIsMuted(!isMuted);
               }}>
               {isMuted ? (
                 <FaVolumeLow className="sound-icon" />
@@ -262,9 +208,7 @@ export function GamePage({ onUpdateStarLevelTheme }) {
 
         <div className="card-container row justify-content-center ">
           <div
-            className={`row ${cardColumnLevel(
-              level
-            )} justify-content-space-around`}>
+            className={`row ${gameLevel(level)} justify-content-space-around`}>
             {cards.map((card) => (
               <div className="card card-size" key={card.cardId}>
                 <Card
