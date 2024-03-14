@@ -145,3 +145,56 @@ export async function fetchPokemonData(): Promise<PokemonData[]> {
 
   return Promise.all(promises);
 }
+
+export function calculateScore(
+  level: number,
+  numberClicks: number,
+  totalTimeSpent: number
+) {
+  let maxClicks = 0;
+  let maxTotalTimeSpent = 0;
+
+  if (level === 1) {
+    maxClicks = 30;
+    maxTotalTimeSpent = 120;
+  } else if (level === 2) {
+    maxClicks = 60;
+    maxTotalTimeSpent = 240;
+  } else if (level === 3) {
+    maxClicks = 90;
+    maxTotalTimeSpent = 360;
+  }
+
+  const clicksPercentage = ((maxClicks - numberClicks) / maxClicks) * 100;
+  const timePercentage =
+    ((maxTotalTimeSpent - totalTimeSpent) / maxTotalTimeSpent) * 100;
+
+  const percentage = (clicksPercentage + timePercentage) / 2;
+  return percentage;
+}
+
+export function calculateStar(percentage: number) {
+  if (percentage >= 80) {
+    return 5;
+  } else if (percentage >= 70) {
+    return 4;
+  } else if (percentage >= 50) {
+    return 3;
+  } else if (percentage >= 30) {
+    return 2;
+  } else if (percentage >= 10) {
+    return 1;
+  } else {
+    return 0;
+  }
+}
+
+export function gameLevel(level: number) {
+  if (level === 1) {
+    return 'col-lev-1';
+  } else if (level === 2) {
+    return 'col-lev-2';
+  } else {
+    return 'col-lev-3';
+  }
+}
